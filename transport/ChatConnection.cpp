@@ -19,7 +19,8 @@ ChatConnection::ChatConnection(std::shared_ptr<boost::asio::ip::tcp::socket>    
 : Connection( s->native_handle(), cm )
 , socket_( s )
 , ioService_( ioService )
-, d_( d ){
+, d_( d )
+, msgBuffer_( MaxSize + 1 ){
     std::cerr << "ChatConnection::ChatConnection: " << this << " -> " << socket_->native_handle() << std::endl;
     processRxAll();
 }
@@ -29,14 +30,12 @@ ChatConnection::~ChatConnection(){
 }
 
 void ChatConnection::processRxAll(){
-    msgBuffer_.clear();
-    msgBuffer_.resize( MaxSize );
     std::cerr << "Start read from " << nativeHandle() << std::endl;
     
     boost::asio::async_read( *socket_, boost::asio::buffer( &msgBuffer_[ 0 ], MaxSize ), boost::asio::transfer_at_least( 1 ),
     [ this ]( const boost::system::error_code& ec, std::size_t len ){
         if( !ec ){
-            // msgBuffer_[ len ] = '\0';
+            msgBuffer_[ len ] = '\0';
 
  
             try{

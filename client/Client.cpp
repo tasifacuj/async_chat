@@ -15,7 +15,7 @@ ChatClient::ChatClient( const std::string& host, const std::string& port )
 , r_( ioService_ )
 , host_( host )
 , port_( port )
-{
+, msgBuffer_( MaxSize + 1 ){
 }
 
 ChatClient::~ChatClient(){
@@ -59,13 +59,11 @@ void ChatClient::join(){
 
 void ChatClient::read(){
     std::cerr << "start read\n";
-    msgBuffer_.clear();
-    msgBuffer_.resize( MaxSize );
-    
     boost::asio::async_read( socket_, boost::asio::buffer( &msgBuffer_[ 0 ], MaxSize ), boost::asio::transfer_at_least( 1 ), 
-    [ this ]( const boost::system::error_code& rc, size_t ){
+    [ this ]( const boost::system::error_code& rc, size_t len ){
         if( !rc ){
             // parse
+            msgBuffer_[ len ] = '\0';
             std::cerr << "Received: " << &msgBuffer_[ 0 ] << std::endl;
             read();
         }else{
