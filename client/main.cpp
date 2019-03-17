@@ -25,9 +25,16 @@ int main(){
         rj::SetValueByPointer( *doc, "/request/method", "REGISTER" );
         rj::SetValueByPointer( *doc, "/request/from", "tasifacij" );
         
-        c.write( doc );
-        std::this_thread::sleep_for( 5s );// wait for answer
+        auto wf = c.write( doc );
+        status = wf.wait_for( 2s );
         
+        if( status != std::future_status::ready ){
+            std::cerr  << "Failed to write\n";
+            return -1;
+        }
+        std::cerr << "wf: " << wf.get() << '\n';
+        c.shutdown();
+        c.join();
     }catch( const std::exception& ex ){
         std::cerr << "FFFFF: " << ex.what();
         return -1;

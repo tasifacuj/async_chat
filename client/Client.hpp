@@ -30,12 +30,13 @@ namespace chat{
             std::vector<char>           msgBuffer_;
             bool                        isRunning_ = false;
             std::promise<bool>          initP_;
+            std::promise<bool>          readP_;
         public: // == ctors ==
             ChatClient( const std::string& host, const std::string& port );
             ~ChatClient();
         public: // == Methods ==
             std::future<bool> run();
-            void write( std::shared_ptr<rapidjson::Document> msg );
+            std::future<bool>  write( std::shared_ptr<rapidjson::Document> msg );
             void shutdown();
             void join();
             bool isRunning(){ return isRunning_; }

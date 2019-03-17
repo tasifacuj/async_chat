@@ -19,8 +19,7 @@ ChatClient::ChatClient( const std::string& host, const std::string& port )
 }
 
 ChatClient::~ChatClient(){
-    shutdown();
-    join();
+   
 }
 
 std::future<bool> ChatClient::run(){
@@ -54,7 +53,8 @@ void ChatClient::shutdown(){
 }
 
 void ChatClient::join(){
-    ioRunner_.join();
+    if( ioRunner_.joinable() )
+        ioRunner_.join();
 }
 
 void ChatClient::read(){
@@ -65,16 +65,16 @@ void ChatClient::read(){
             // parse
             msgBuffer_[ len ] = '\0';
             std::cerr << "Received: " << &msgBuffer_[ 0 ] << std::endl;
+            readP_.set_value(true);
             read();
         }else{
             std::cerr << "read err: " << rc.message() << std::endl;
-            shutdown();
         }
     });
 }
 
-void ChatClient::write( std::shared_ptr<rapidjson::Document> doc ){
-    // ioService_.post( [ this, doc ]()
+std::future<bool>  ChatClient::write( std::shared_ptr<rapidjson::Document> doc ){
+    readP_ = {};
     {
         rj::StringBuffer buffer;
         rj::Writer<rj::StringBuffer> writer( buffer );
@@ -82,15 +82,15 @@ void ChatClient::write( std::shared_ptr<rapidjson::Document> doc ){
         boost::asio::async_write( socket_, boost::asio::buffer( buffer.GetString(), buffer.GetSize() ), [ this ]( const boost::system::error_code& rc, size_t len ){
             if( !rc ){
                 std::cerr << "written " << len << " bytes\n";
-                // read();
             }else{
                 
                 std::cerr << rc.message() << std::endl;
                 shutdown();
+                readP_.set_value( false );
             }
         } );
     }; 
-    
+    return readP_.get_future();
 }
 
 }
