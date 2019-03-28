@@ -1,0 +1,21 @@
+{
+    "request" : {
+        "register" : {
+            "from" : "user1"
+        },
+        "invite" : {
+            "from" : "user1",
+            "to" : "user2"
+        },
+        "message" : {
+            "from" : "user1",
+            "to" : "user2",
+            "x" : 1,
+            "y" : 1
+        },
+        "query" : [
+            "user1",
+            "user2"
+        ]
+    }
+}

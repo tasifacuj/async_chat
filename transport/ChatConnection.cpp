@@ -45,16 +45,11 @@ void ChatConnection::processRxAll(){
                 if( doc->HasParseError() ){
                     throw std::runtime_error( rj::GetParseError_En( doc->GetParseError() ) );
                 }else{
-
-
-                    if( !doc->HasMember( "cookie" ) )
-                        throw std::runtime_error( "No cookies" );
-
                     rj::SetValueByPointer( *doc, "/cookie/handle", nativeHandle() );
                     d_.dispatchIncoming( doc );
                 }
             }catch( const std::exception& ex ){
-                std::cerr << ex.what() << std::endl;
+                std::cerr << __func__ << " " << ex.what() << std::endl;
             }
             processRxAll();
         }else{
@@ -70,13 +65,18 @@ bool ChatConnection::requestWrite( std::shared_ptr<rapidjson::Document> doc ){
     rj::StringBuffer buffer;
     rj::Writer<rj::StringBuffer> writer( buffer );
     doc->Accept( writer );
-    std::cerr << "send response " << buffer.GetString() << std::endl;
+    std::cerr << "send " << buffer.GetString() << std::endl;
     boost::asio::async_write( *socket_, boost::asio::buffer( buffer.GetString(), buffer.GetLength() ),
     [ this ]( boost::system::error_code ec, std::size_t len ){
         if( !ec ){
             std::cerr << "sent " << len << " bytes into " << nativeHandle() << std::endl;
         }
     });
+}
+
+void ChatConnection::release(){
+    d_.onDisconnected( nativeHandle() );
+    Connection::release();
 }
 
 }

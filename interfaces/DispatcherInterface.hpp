@@ -13,6 +13,7 @@ namespace chat{
             virtual ~DispatcherInterface(){}
             virtual void dispatchIncoming( std::shared_ptr<rapidjson::Document> doc ) = 0;
             virtual void send( std::shared_ptr<rapidjson::Document> doc ) = 0;
+            virtual void onDisconnected( int handle ) = 0;
         };
     }
 }

@@ -26,7 +26,8 @@ namespace chat{
             ChatConnection& operator=( const ChatConnection& ) = delete;
             virtual ~ChatConnection();
         public: // == Methods ==
-            virtual bool requestWrite( std::shared_ptr<rapidjson::Document> msg ) override;
+            virtual bool requestWrite( std::shared_ptr<rapidjson::Document> msg )   override;
+            virtual void release()                                                  override;
         private:
             void processRxAll();
         };

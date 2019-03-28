@@ -20,8 +20,3 @@ set( SRC_LIST dispatcher/Dispatcher.cpp
 add_executable( chat_server ${SRC_LIST} )
 target_link_libraries( chat_server LINK_PUBLIC ${Boost_LIBRARIES} )
 
-
-
-set( CLIENT_SRC client/Client.cpp client/main.cpp )
-add_executable( chat_client ${CLIENT_SRC} )
-target_link_libraries( chat_client LINK_PUBLIC ${Boost_LIBRARIES} pthread )
