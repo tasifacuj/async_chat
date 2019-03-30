@@ -143,21 +143,21 @@ Item {
         }
     }
 
-    states: State {
-        name: "Turned"
-        when: !gameData.player1Turn
-        PropertyChanges {
-            target: rotablePanel
-            rotation: 180
-        }
-    }
+//    states: State {
+//        name: "Turned"
+//        when: !gameData.player1Turn
+//        PropertyChanges {
+//            target: rotablePanel
+//            rotation: 180
+//        }
+//    }
 
-    transitions: Transition {
-        NumberAnimation {
-            properties: "rotation"
-            easing.type: Easing.OutBack
-            duration: 800
-        }
-    }
+//    transitions: Transition {
+//        NumberAnimation {
+//            properties: "rotation"
+//            easing.type: Easing.OutBack
+//            duration: 800
+//        }
+//    }
 
 }

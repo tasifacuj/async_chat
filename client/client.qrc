@@ -6,7 +6,6 @@
         <file>qml/GameView.qml</file>
         <file>qml/MainView.qml</file>
         <file>qml/MenuPanel.qml</file>
-        <file>qml/Switch.qml</file>
         <file>qml/Tile.qml</file>
         <file>images/background.jpg</file>
         <file>images/close.png</file>
