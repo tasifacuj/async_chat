@@ -1,44 +1,11 @@
-#include "client/Client.hpp"
-#include "rapidjson/pointer.h"
-#include "rapidjson/document.h"
-
-#include <iostream>
-#include <string>
-using namespace chat::client;
-namespace rj = rapidjson;
-
-using namespace std::literals::chrono_literals;
-
-int main(){
-    try{
-        ChatClient c( "127.0.0.1", "2504" );
-        auto f = c.run();
-        auto status = f.wait_for( 2s );
-        
-        if( status != std::future_status::ready ){
-            std::cerr  << "Failed to start\n";
-            return -1;
-        }
-        std::cerr << f.get() << '\n';
-        auto doc = std::make_shared<rj::Document>();
-        rj::SetValueByPointer( *doc, "/cookie/sid", "bbbzzz" );
-        rj::SetValueByPointer( *doc, "/request/method", "REGISTER" );
-        rj::SetValueByPointer( *doc, "/request/from", "tasifacij" );
-        
-        auto wf = c.write( doc );
-        status = wf.wait_for( 2s );
-        
-        if( status != std::future_status::ready ){
-            std::cerr  << "Failed to write\n";
-            return -1;
-        }
-        std::cerr << "wf: " << wf.get() << '\n';
-        c.shutdown();
-        c.join();
-    }catch( const std::exception& ex ){
-        std::cerr << "FFFFF: " << ex.what();
-        return -1;
-    }
-
-    return 0;
+#include <QtGui>
+#include "MainViewModel.hpp"
+#include <QtGui>
+int main( int argc, char **argv ){
+    
+    QGuiApplication app(argc, argv);
+    MainViewModel mvm;
+//    mvm.resize( 1800, 900 );
+    mvm.show();
+    return app.exec();
 }

@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Button.qml</file>
+        <file>qml/ControlPanel.qml</file>
+        <file>qml/Frame.qml</file>
+        <file>qml/GameView.qml</file>
+        <file>qml/MainView.qml</file>
+        <file>qml/MenuPanel.qml</file>
+        <file>qml/Switch.qml</file>
+        <file>qml/Tile.qml</file>
+        <file>images/background.jpg</file>
+        <file>images/close.png</file>
+        <file>images/minimize.png</file>
+        <file>images/particle.png</file>
+        <file>images/quit.png</file>
+        <file>images/splash.jpg</file>
+        <file>images/tile_background.png</file>
+        <file>images/tile_button1.png</file>
+        <file>images/tile_button2.png</file>
+    </qresource>
+</RCC>
