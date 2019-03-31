@@ -4,22 +4,25 @@
 #include <string>
 #include <future>
 #include <memory>
+#include <deque>
 
 #include "rapidjson/document.h"
+#include "TransportResponseInterface.hpp"
 
 namespace io = boost::asio;
 
-namespace chat{
-    class Message;
-
-    namespace client{
+namespace FiveInRow{
+    namespace transport{
         /**
          * boost driven tcp client
          * seds raw strings from input.
         */
-        class ChatClient final{
+        class Transport final{
         public: // == Constants ==
             static constexpr int MaxSize = 512;
+            using ByteArray = std::vector<char>;
+            using DocPtr = std::shared_ptr<rapidjson::Document>;
+            using MessageQ = std::deque<DocPtr>;
         private: // == Memebers ==
             std::thread                 ioRunner_;      //!< io thread to avoid std input blocking.
             io::io_service              ioService_;     //!< io/task scheduler
@@ -27,22 +30,27 @@ namespace chat{
             io::ip::tcp::resolver       r_;             // converts strig address into boost asio endpoint,
             std::string                 host_;
             std::string                 port_;
-            std::vector<char>           msgBuffer_;
+            ByteArray                   msgBuffer_;
             bool                        isRunning_ = false;
-            std::promise<bool>          initP_;
-            std::promise<bool>          readP_;
+            TransportResponseInterface* rif_ = nullptr;
+            MessageQ                    q_;
         public: // == ctors ==
-            ChatClient( const std::string& host, const std::string& port );
-            ~ChatClient();
+            Transport( const std::string& host, const std::string& port );
+            ~Transport();
         public: // == Methods ==
-            std::future<bool> run();
-            std::future<bool>  write( std::shared_ptr<rapidjson::Document> msg );
+            void run();
+            void  send( std::shared_ptr<rapidjson::Document> msg );
             void shutdown();
             void join();
             bool isRunning(){ return isRunning_; }
+            void registerRif( TransportResponseInterface* rif ){
+              rif_ = rif;
+            }
+
         private:// == Methods ==
             void connect( io::ip::tcp::resolver::iterator it );
-            void read();
+            void startRead();
+            void startWrite();
         };
     }
 }

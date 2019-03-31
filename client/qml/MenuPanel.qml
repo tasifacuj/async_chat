@@ -76,7 +76,7 @@ Item {
             Frame {
                 id: aboutArea
                 height: 270
-                width: 290
+                width: 150
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "#ffffff" }
                     GradientStop { position: 1.0; color: "#eeeeee" }
@@ -86,32 +86,31 @@ Item {
                     id: aboutAreaFlickable
                     anchors.fill: parent
                     contentWidth: aboutArea.width
-                    contentHeight: aboutAreaText.height + aboutAreaLogo.height + 20
+                    contentHeight: users.height  + 20
                     flickableDirection: Flickable.VerticalFlick
                     clip: true
-                    Text {
-                        id: aboutAreaText
-                        width: parent.width - 20
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                        font.family: "Helvetica"
-                        font.pointSize: 15
-                        text: "\nThis game is the classical 5-in-a-row, also " +
-                                "known as tic-tac-toe or Gomoku. Players place their " +
-                                "tiles in turns, anywhere in the 19x19 size board. " +
-                                "The winner is the first player to get an unbroken " +
-                                "row of five stones horizontally, vertically, or " +
-                                "diagonally.\n\nGame logic is implemented with Qt " +
-                                "C++ and the UI with QML Declarative UI.\n\nEnjoy! =)\n"
-                    }
-                    Image {
-                        id: aboutAreaLogo
-                        source: "qrc:/images/quit.png"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: aboutAreaText.bottom
-                        anchors.topMargin: 10
-                    }
+//                    Text {
+//                        id: aboutAreaText
+//                        width: parent.width - 20
+//                        anchors.horizontalCenter: parent.horizontalCenter
+//                        wrapMode: Text.WordWrap
+//                        horizontalAlignment: Text.AlignHCenter
+//                        font.family: "Helvetica"
+//                        font.pointSize: 15
+//                        text: "\nThis game is the classical 5-in-a-row, also " +
+//                                "known as tic-tac-toe or Gomoku. Players place their " +
+//                                "tiles in turns, anywhere in the 19x19 size board. " +
+//                                "The winner is the first player to get an unbroken " +
+//                                "row of five stones horizontally, vertically, or " +
+//                                "diagonally.\n\nGame logic is implemented with Qt " +
+//                                "C++ and the UI with QML Declarative UI.\n\nEnjoy! =)\n"
+//                    }
+                   Users{
+                       anchors.horizontalCenter: parent.horizontalCenter
+                       anchors.verticalCenter: parent.verticalCenter
+                       id: users
+                       width:  parent.width - 20
+                   }
                 }
             }
 

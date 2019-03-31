@@ -1,42 +1,62 @@
 #include "GameViewModel.hpp"
 
+#include <QDebug>
+#include <QThread>
+#include "rapidjson/pointer.h"
+
+namespace FiveInRow {
+
 const int TILE_ROWS = 19;
 const int TILE_COLS = 19;
+namespace  rj = rapidjson;
 
 GameViewModel::GameViewModel(QObject *parent)
     : QObject(parent)
-    , m_gameOn(false)
-    , m_player1Turn(true)
-    , m_moves(0)
-    , m_gameTimeSeconds(0)
-    , m_gameTime(0,0)
-    , m_time("0:00")
+    , gameOn_(false)
+    , player1Turn_(true)
+    , moves_(0)
+    , gameTimeSeconds_(0)
+    , gameTime_(0,0)
+    , time_("0:00")
+    , transport_( "127.0.0.1", "2504" )
 {
     // Create tiles
     for(int i = 0; i < TILE_ROWS * TILE_COLS; ++i) {
-        m_tiles << new Tile;
+        tiles_ << new Tile;
     }
 
     // Timer to update the game time
-    m_gameTimer = new QTimer(this);
-    connect(m_gameTimer, SIGNAL(timeout()), this, SLOT(updateTime()));
-    m_gameTimer->setInterval(1000);
+    gameTimer_ = new QTimer(this);
+    connect(gameTimer_, SIGNAL(timeout()), this, SLOT(updateTime()));
+    gameTimer_->setInterval(1000);
+    transport_.registerRif( this );
+//    transport_.run();
+//    users_.append( "Item 1" );
+//    users_.append( "Item 2" );
+//    users_.append( "Item 3" );
+//    users_.append( "Item 4" );
+//    QThread::msleep( 1000 );
+//    auto registerReq = std::make_shared<rj::Document>();
+//    rj::SetValueByPointer( *registerReq, "/request/register/from", "User 1" );
+//    transport_.send( registerReq );
 }
 
 GameViewModel::~GameViewModel()
 {
+    transport_.shutdown();
+    transport_.join();
 }
 
 void GameViewModel::resetGame()
 {
     setMoves(0);
-    foreach(Tile *t, m_tiles) {
+    foreach(Tile *t, tiles_) {
         t->setHasButton1(false);
         t->setHasButton2(false);
         t->setHighlighted(false);
     }
-    m_selectedTiles.clear();
-    m_gameTimeSeconds = 0;
+    selectedTiles_.clear();
+    gameTimeSeconds_ = 0;
     setGameTime("0:00");
     setPlayer1Turn(true);
     setGameOn(true);
@@ -45,23 +65,23 @@ void GameViewModel::resetGame()
 void GameViewModel::pauseGame(bool state)
 {
     if (state)
-        m_gameTimer->stop();
+        gameTimer_->stop();
     else
-        m_gameTimer->start();
+        gameTimer_->start();
 }
 
 
 
 void GameViewModel::flip(int index)
 {
-    if (!m_gameOn)
+    if (!gameOn_)
         return;
 
     Tile *t = tile(index);
     if (!t || t->hasButton1() || t->hasButton2())
         return;
 
-    setMoves(m_moves + 1);
+    setMoves(moves_ + 1);
 
     if (player1Turn()) {
         t->setHasButton1(true);
@@ -76,7 +96,7 @@ void GameViewModel::flip(int index)
         // Player whose turn it was won
 
         // Highlight the winning tiles
-        m_selectedTiles.last()->setHighlighted(false);
+        selectedTiles_.last()->setHighlighted(false);
         for(int i=0 ; i<winningTiles.count() ; ++i) {
             winningTiles.at(i)->setHighlighted(true);
         }
@@ -86,37 +106,37 @@ void GameViewModel::flip(int index)
     }
 
     // Set only last tile highlighted
-    if (!m_selectedTiles.empty()) m_selectedTiles.last()->setHighlighted(false);
+    if (!selectedTiles_.empty()) selectedTiles_.last()->setHighlighted(false);
     t->setHighlighted(true);
 
     // Add tile into selected list, for undo
-    m_selectedTiles << t;
+    selectedTiles_ << t;
 
     setPlayer1Turn(!player1Turn());
 }
 
 void GameViewModel::undoTile()
 {
-    if (!m_selectedTiles.empty())
+    if (!selectedTiles_.empty())
     {
         // Clear button and unset highlight
-        m_selectedTiles.last()->setHasButton1(false);
-        m_selectedTiles.last()->setHasButton2(false);
-        m_selectedTiles.last()->setHighlighted(false);
-        m_selectedTiles.pop();
+        selectedTiles_.last()->setHasButton1(false);
+        selectedTiles_.last()->setHasButton2(false);
+        selectedTiles_.last()->setHighlighted(false);
+        selectedTiles_.pop();
 
         // Set new last tile highlighted
-        if (!m_selectedTiles.empty()) m_selectedTiles.last()->setHighlighted(true);
+        if (!selectedTiles_.empty()) selectedTiles_.last()->setHighlighted(true);
 
-        setMoves(m_moves-1);
+        setMoves( moves_ - 1 );
         setPlayer1Turn(!player1Turn());
     }
 }
 
 void GameViewModel::updateTime()
 {
-    if (m_gameOn) m_gameTimeSeconds++;
-    setGameTime(m_gameTime.addSecs(m_gameTimeSeconds).toString("m:ss"));
+    if ( gameOn_ ) gameTimeSeconds_++;
+    setGameTime( gameTime_.addSecs( gameTimeSeconds_ ).toString("m:ss"));
 }
 
 bool GameViewModel::checkWin(int index, int dx, int dy, QList<Tile*> &winningTiles)
@@ -135,3 +155,82 @@ bool GameViewModel::checkWin(int index, int dx, int dy, QList<Tile*> &winningTil
     }
     return false;
 }
+//-----------------------------------------------------------------------
+// TransportResponseIterface
+void GameViewModel::onReadCompleted( const rapidjson::Document& doc ){
+    if( rapidjson::GetValueByPointer( doc, "/request/invite" ) )
+        dispatchInvite( doc );
+    else if( rapidjson::GetValueByPointer( doc, "/request/message" ) )
+        dispatchMessage( doc );
+    else if( rapidjson::GetValueByPointer( doc, "/request/query" ) )
+        dispatchQuery( doc );
+    else if( rapidjson::GetValueByPointer( doc, "/request/register" ) )
+        dispatchRegister( doc );
+}
+
+void GameViewModel::onWriteError( const QString &err ){
+    qCritical() << err;
+}
+
+void GameViewModel::onParseError(const QString &err){
+    qCritical() << err;
+}
+
+void GameViewModel::selectUser( int idx ){
+    qDebug() << "Selected user " << users_[ idx ];
+}
+
+void GameViewModel::dispatchInvite( const rapidjson::Document& ){
+
+}
+
+void GameViewModel::dispatchMessage( const rapidjson::Document& ){
+
+}
+
+void GameViewModel::onConnected(){
+    auto registerReq = std::make_shared<rj::Document>();
+    rj::SetValueByPointer( *registerReq, "/request/register/from", rj::Value( userName_.toLatin1(), registerReq->GetAllocator() ) );
+    transport_.send( registerReq );
+}
+
+void GameViewModel::dispatchQuery( const rapidjson::Document& doc ){
+    const rj::Value* usersV = rj::GetValueByPointer( doc, "/request/query" );
+
+    if( usersV && usersV->IsArray() ){
+        const rj::Value& userRef = *usersV;
+
+        for( rj::SizeType i = 0; i < usersV->Size(); i++ ){
+           std::string u( userRef[ i ].GetString() );
+           qDebug() << ">>>> " << u.c_str();
+           users_.append( u.c_str() );
+        }
+
+        emit usersChanged();
+    }
+}
+
+void GameViewModel::dispatchRegister( const rapidjson::Document& doc ){
+    const rj::Value* v = rj::GetValueByPointer( doc, "/request/register/from" );
+
+    if( v ){
+        QString user = v->GetString();
+        qDebug() << "New registration from " << user;
+
+        if( userName_ != user ){
+            users_.append( user );
+            emit usersChanged();
+        }else{
+            qWarning() << userName_  << " == " << user;
+        }
+    }
+}
+
+void GameViewModel::init( const QString& name ){
+    userName_ = name;
+    transport_.run();
+}
+
+
+
+}// namespace FiveInnRow

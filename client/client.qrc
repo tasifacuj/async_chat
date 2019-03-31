@@ -16,5 +16,6 @@
         <file>images/tile_background.png</file>
         <file>images/tile_button1.png</file>
         <file>images/tile_button2.png</file>
+        <file>qml/Users.qml</file>
     </qresource>
 </RCC>

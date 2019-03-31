@@ -52,6 +52,13 @@ void Dispatcher::dispatchRegister( std::shared_ptr<rapidjson::Document> doc )try
     rj::SetValueByPointer( *response, "/cookie/handle", handle );
     rj::SetValueByPointer( *response, "/status", "OK" );
     transport_.sendMessage( response );
+
+    // notify
+    std::for_each( appSessions_.begin(), appSessions_.end(), [ doc, this ]( const AppSessionSet::value_type& vt ){
+        int h = vt.right;
+        rj::SetValueByPointer( *doc, "/cookie/handle", h );    
+        transport_.sendMessage( doc );
+    } );
 }catch( const std::exception& ex ){
     std::cerr << ex.what() << std::endl;
 }

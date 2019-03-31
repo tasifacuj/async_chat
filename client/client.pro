@@ -8,15 +8,16 @@ gcc:QMAKE_CXXFLAGS_WARN_ON += -Wall -Wextra -Werror=return-type -Werror=reorder 
 warn_error:QMAKE_CXXFLAGS_WARN_ON += -Werror
 
 SOURCES += main.cpp \
-    Client.cpp\
     GameViewModel.cpp\
-    MainViewModel.cpp
+    MainViewModel.cpp \
+    Transport.cpp
 
-HEADERS += Client.hpp\
+HEADERS +=\
     GameViewModel.hpp\
     MainViewModel.hpp\
-    Tile.hpp\
-    Client.hpp
+    Tile.hpp \
+    Transport.hpp \
+    TransportResponseInterface.hpp
 
 unix {
     target.path = /home/vida/bin
