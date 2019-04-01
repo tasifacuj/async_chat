@@ -97,9 +97,10 @@ namespace FiveInRow {
         Tile *tile(int index) const {return (index >= 0 && index < tiles_.count()) ? tiles_.at(index) : 0;}
         bool checkWin(int index, int dx, int dy, QList<Tile *> &winningTiles);
         void dispatchInvite( const rapidjson::Document& doc );
-        void dispatchMessage( const rapidjson::Document& doc );
+        void dispatchMessage(const rapidjson::Document& msg );
         void dispatchQuery( const rapidjson::Document& doc );
         void dispatchRegister( const rapidjson::Document& doc );
+        void flipInternal(int index );
     };
 }
 

@@ -80,50 +80,19 @@ void GameViewModel::pauseGame(bool state)
 
 
 
-void GameViewModel::flip(int index)
-{
-    if (!gameOn_)
-        return;
-
-    // TODO: implement message
-    // TODO: implement show board from remote request
-
-    Tile *t = tile(index);
-    if (!t || t->hasButton1() || t->hasButton2())
-        return;
-
-    setMoves(moves_ + 1);
-
-    if (player1Turn()) {
-        t->setHasButton1(true);
-    } else {
-        t->setHasButton2(true);
+void GameViewModel::flip(int index){
+    if( false == remoteStart_ and false == player1Turn() )
+        qWarning() << "Wait for player 2";
+    else if( remoteStart_ and player1Turn() )
+        qWarning() << "wait for player 1";
+    else {
+        flipInternal( index );
+        auto msg = std::make_shared<rj::Document>();
+        rj::SetValueByPointer( *msg, "/request/message/from", rj::Value( userName_.toLatin1(), msg->GetAllocator() ) );
+        rj::SetValueByPointer( *msg, "/request/message/to", rj::Value( rhs_.toLatin1(), msg->GetAllocator() ) );
+        rj::SetValueByPointer( *msg, "/request/message/index", index );
+        transport_.send( msg );
     }
-
-    // Check for winning
-    QList<Tile *> winningTiles;
-    if (checkWin(index, 1, 0, winningTiles) || checkWin(index, 0, 1, winningTiles) ||
-        checkWin(index, 1, 1, winningTiles) || checkWin(index, 1, -1, winningTiles)) {
-        // Player whose turn it was won
-
-        // Highlight the winning tiles
-        selectedTiles_.last()->setHighlighted(false);
-        for(int i=0 ; i<winningTiles.count() ; ++i) {
-            winningTiles.at(i)->setHighlighted(true);
-        }
-
-        setGameOn(false);
-        return;
-    }
-
-    // Set only last tile highlighted
-    if (!selectedTiles_.empty()) selectedTiles_.last()->setHighlighted(false);
-    t->setHighlighted(true);
-
-    // Add tile into selected list, for undo
-    selectedTiles_ << t;
-
-    setPlayer1Turn(!player1Turn());
 }
 
 void GameViewModel::undoTile()
@@ -202,8 +171,13 @@ void GameViewModel::dispatchInvite( const rapidjson::Document& doc ){
     setRemoteStart( true );//TODO: show gameboard
 }
 
-void GameViewModel::dispatchMessage( const rapidjson::Document& ){
-
+void GameViewModel::dispatchMessage( const rapidjson::Document& msg ){
+    int idx = msg[ "request" ][ "message" ][ "index" ].GetInt();
+    QString from = msg[ "request" ][ "message" ][ "from" ].GetString();
+    QString to = msg[ "request" ][ "message" ][ "to" ].GetString();
+    qDebug() << "From = " << from << ", to = " << to << ", idx = " << idx;
+    assert( to == userName_ && from == rhs_ );
+    flipInternal( idx );
 }
 
 void GameViewModel::onConnected(){
@@ -255,6 +229,49 @@ void GameViewModel::init( const QString& name ){
     transport_.run();
 }
 
+void GameViewModel::flipInternal( int index ){
+    if (!gameOn_)
+        return;
 
+    // TODO: implement message
+    // TODO: implement show board from remote request
+
+    Tile *t = tile(index);
+    if (!t || t->hasButton1() || t->hasButton2())
+        return;
+
+    setMoves(moves_ + 1);
+
+    if (player1Turn()) {
+        t->setHasButton1(true);
+    } else {
+        t->setHasButton2(true);
+    }
+
+    // Check for winning
+    QList<Tile *> winningTiles;
+    if (checkWin(index, 1, 0, winningTiles) || checkWin(index, 0, 1, winningTiles) ||
+        checkWin(index, 1, 1, winningTiles) || checkWin(index, 1, -1, winningTiles)) {
+        // Player whose turn it was won
+
+        // Highlight the winning tiles
+        selectedTiles_.last()->setHighlighted(false);
+        for(int i=0 ; i<winningTiles.count() ; ++i) {
+            winningTiles.at(i)->setHighlighted(true);
+        }
+
+        setGameOn(false);
+        return;
+    }
+
+    // Set only last tile highlighted
+    if (!selectedTiles_.empty()) selectedTiles_.last()->setHighlighted(false);
+    t->setHighlighted(true);
+
+    // Add tile into selected list, for undo
+    selectedTiles_ << t;
+
+    setPlayer1Turn(!player1Turn());
+}
 
 }// namespace FiveInnRow
