@@ -144,7 +144,7 @@ void GameViewModel::onReadCompleted( const rapidjson::Document& doc ){
         dispatchMessage( doc );
     else if( rapidjson::GetValueByPointer( doc, "/participants" ) )
         dispatchQuery( doc );
-    else if( rapidjson::GetValueByPointer( doc, "/request/register" ) )
+    else if( rapidjson::GetValueByPointer( doc, "/request/register" ) or rapidjson::GetValueByPointer( doc, "/request/unregister" ) )
         dispatchRegister( doc );
     else
         defaultHandler_( doc );
@@ -218,11 +218,20 @@ void GameViewModel::dispatchRegister( const rapidjson::Document& doc ){
         }else{
             qWarning() << userName_  << " == " << user;
         }
+
+        auto qReq = std::make_shared<rj::Document>();
+        rj::SetValueByPointer( *qReq, "/request/query", rj::Value( rj::kNullType ) );
+        transport_.send( qReq );
     }
 
-    auto qReq = std::make_shared<rj::Document>();
-    rj::SetValueByPointer( *qReq, "/request/query", rj::Value( rj::kNullType ) );
-    transport_.send( qReq );
+    const rj::Value* uv = rj::GetValueByPointer( doc, "/request/unregister/from" );
+
+    if( uv ){
+        users_.removeOne( uv->GetString() );
+        emit usersChanged();
+        setGameOn( false );
+        setRemoteStart( false );
+    }
 }
 
 void GameViewModel::init( const QString& name ){

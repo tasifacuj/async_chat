@@ -10,6 +10,8 @@ Item {
         if( startedFromRemote ){
             console.log( "startedFromRemote: ", startedFromRemote );
             startGame( true );
+        }else{
+            menuPanel.state = "";
         }
     }
 

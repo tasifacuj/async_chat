@@ -137,7 +137,21 @@ void Dispatcher::dispatchQuery( std::shared_ptr<rapidjson::Document> doc )try{
 }
 
 void Dispatcher::onDisconnected( int handle ){
-    appSessions_.right.erase( handle );
+    auto it = appSessions_.right.find( handle );
+    
+    if( it != appSessions_.right.end() ){
+        std::string who = it->second;
+        appSessions_.right.erase( it );
+
+        std::for_each( appSessions_.begin(), appSessions_.end(), [ this, &who ]( const AppSessionSet::value_type& vt ){
+            std::shared_ptr<rapidjson::Document> notify = std::make_shared<rj::Document>();
+            int h = vt.right;
+            rj::SetValueByPointer( *notify, "/cookie/handle", h );
+            rj::SetValueByPointer( *notify, "/request/unregister/from", rj::Value( who.c_str(), notify->GetAllocator() ) );
+            std::cerr << "Send unreg notification to " << vt.left << ":" << h << std::endl;    
+            transport_.sendMessage( notify );
+    } );
+    }
 }
 
 }// dispatcher
