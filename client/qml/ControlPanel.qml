@@ -104,12 +104,9 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 10
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Undo"
+                text: ""
                 opacity: gameData.gameOn
-                disabled: !gameData.moves
-                onClicked: {
-                    gameData.undoTile()
-                }
+                disabled: true
             }
             Text {
                 anchors.centerIn: buttonUndo

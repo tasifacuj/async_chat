@@ -169,6 +169,7 @@ void GameViewModel::dispatchInvite( const rapidjson::Document& doc ){
     assert( userName_ == to->GetString() );
     rhs_ = from->GetString();
     setRemoteStart( true );//TODO: show gameboard
+    resetGame( true );
 }
 
 void GameViewModel::dispatchMessage( const rapidjson::Document& msg ){

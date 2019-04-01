@@ -14,10 +14,14 @@ Item {
     }
 
     function startGame( remote ){
-        gameData.resetGame( remote )
-        gameView.centerBoard()
-        menuPanel.state = "hide"
-        gameData.pauseGame(false)
+        if( gameData.users.length > 0 ){
+            gameData.resetGame( remote )
+            gameView.centerBoard()
+            menuPanel.state = "hide"
+            gameData.pauseGame(false)
+        }else{
+            console.warn( "Can't start without any participant" );
+        }
     }
 
     Item {
