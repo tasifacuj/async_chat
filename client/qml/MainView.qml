@@ -5,6 +5,9 @@ Window {
     width: 800
     height: 480
 
+    property alias remoteStart: menuPanel.startedFromRemote
+
+
     // *** Game View ***
     GameView {
         id: gameView

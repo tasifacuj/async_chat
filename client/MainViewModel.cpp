@@ -17,6 +17,12 @@ MainViewModel::MainViewModel(){
 
     // Open root QML file
     engine_.load( QUrl( QStringLiteral("qrc:/qml/MainView.qml") ) );
+
+    connect( &m_gameData, &GameViewModel::remoteStartChanged, [ this ](){
+        qDebug()<<"Set QML property: remoteStart -> " << m_gameData.getRemoteStart();
+        auto wnd = qobject_cast<QQuickWindow*>( engine_.rootObjects().value( 0 ) );
+        QQmlProperty::write( wnd, "remoteStart", m_gameData.getRemoteStart());
+    } );
 }
 
 MainViewModel::~MainViewModel()

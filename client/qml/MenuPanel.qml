@@ -4,6 +4,21 @@ Item {
     id: menuPanel
     width: parent.width
     height: parent.height
+    property bool startedFromRemote: false
+
+    onStartedFromRemoteChanged: {
+        if( startedFromRemote ){
+            console.log( "startedFromRemote: ", startedFromRemote );
+            startGame( true );
+        }
+    }
+
+    function startGame( remote ){
+        gameData.resetGame( remote )
+        gameView.centerBoard()
+        menuPanel.state = "hide"
+        gameData.pauseGame(false)
+    }
 
     Item {
         id: minimizeButton
@@ -89,22 +104,7 @@ Item {
                     contentHeight: users.height  + 20
                     flickableDirection: Flickable.VerticalFlick
                     clip: true
-//                    Text {
-//                        id: aboutAreaText
-//                        width: parent.width - 20
-//                        anchors.horizontalCenter: parent.horizontalCenter
-//                        wrapMode: Text.WordWrap
-//                        horizontalAlignment: Text.AlignHCenter
-//                        font.family: "Helvetica"
-//                        font.pointSize: 15
-//                        text: "\nThis game is the classical 5-in-a-row, also " +
-//                                "known as tic-tac-toe or Gomoku. Players place their " +
-//                                "tiles in turns, anywhere in the 19x19 size board. " +
-//                                "The winner is the first player to get an unbroken " +
-//                                "row of five stones horizontally, vertically, or " +
-//                                "diagonally.\n\nGame logic is implemented with Qt " +
-//                                "C++ and the UI with QML Declarative UI.\n\nEnjoy! =)\n"
-//                    }
+
                    Users{
                        anchors.horizontalCenter: parent.horizontalCenter
                        anchors.verticalCenter: parent.verticalCenter
@@ -121,12 +121,7 @@ Item {
                 Button {
                     id: button2PlayerGame
                     text: "2 Players Game"
-                    onClicked: {
-                        gameData.resetGame()
-                        gameView.centerBoard()
-                        menuPanel.state = "hide"
-                        gameData.pauseGame(false)
-                    }
+                    onClicked: startGame( false )
                 }
 
                 Button {
