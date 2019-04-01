@@ -30,15 +30,7 @@ GameViewModel::GameViewModel(QObject *parent)
     connect(gameTimer_, SIGNAL(timeout()), this, SLOT(updateTime()));
     gameTimer_->setInterval(1000);
     transport_.registerRif( this );
-//    transport_.run();
-//    users_.append( "Item 1" );
-//    users_.append( "Item 2" );
-//    users_.append( "Item 3" );
-//    users_.append( "Item 4" );
-//    QThread::msleep( 1000 );
-//    auto registerReq = std::make_shared<rj::Document>();
-//    rj::SetValueByPointer( *registerReq, "/request/register/from", "User 1" );
-//    transport_.send( registerReq );
+    defaultHandler_ = []( const rj::Document& ){};
 }
 
 GameViewModel::~GameViewModel()
@@ -47,8 +39,7 @@ GameViewModel::~GameViewModel()
     transport_.join();
 }
 
-void GameViewModel::resetGame()
-{
+void GameViewModel::resetGame(bool remote){
     setMoves(0);
     foreach(Tile *t, tiles_) {
         t->setHasButton1(false);
@@ -60,6 +51,23 @@ void GameViewModel::resetGame()
     setGameTime("0:00");
     setPlayer1Turn(true);
     setGameOn(true);
+
+    if( false == remote ){
+        auto inviteReq = std::make_shared<rj::Document>();
+        rj::SetValueByPointer( *inviteReq, "/request/invite/from", rj::Value( userName_.toLatin1(), inviteReq->GetAllocator() ) );
+        rj::SetValueByPointer( *inviteReq, "/request/invite/to", rj::Value( rhs_.toLatin1(), inviteReq->GetAllocator() ) );
+        defaultHandler_ = []( const rj::Document& doc ){
+            const rj::Value* v = rj::GetValueByPointer( doc, "/status" );
+
+            if( v && v->GetString() == "Ok" ){
+                qDebug() << "invite ok";
+            }else{
+                qCritical() << "Invite failed ";
+            }
+        };
+
+        transport_.send( inviteReq );
+    }
 }
 
 void GameViewModel::pauseGame(bool state)
@@ -76,6 +84,9 @@ void GameViewModel::flip(int index)
 {
     if (!gameOn_)
         return;
+
+    // TODO: implement message
+    // TODO: implement show board from remote request
 
     Tile *t = tile(index);
     if (!t || t->hasButton1() || t->hasButton2())
@@ -162,10 +173,12 @@ void GameViewModel::onReadCompleted( const rapidjson::Document& doc ){
         dispatchInvite( doc );
     else if( rapidjson::GetValueByPointer( doc, "/request/message" ) )
         dispatchMessage( doc );
-    else if( rapidjson::GetValueByPointer( doc, "/request/query" ) )
+    else if( rapidjson::GetValueByPointer( doc, "/participants" ) )
         dispatchQuery( doc );
     else if( rapidjson::GetValueByPointer( doc, "/request/register" ) )
         dispatchRegister( doc );
+    else
+        defaultHandler_( doc );
 }
 
 void GameViewModel::onWriteError( const QString &err ){
@@ -178,10 +191,15 @@ void GameViewModel::onParseError(const QString &err){
 
 void GameViewModel::selectUser( int idx ){
     qDebug() << "Selected user " << users_[ idx ];
+    rhs_ = users_[ idx ];
 }
 
-void GameViewModel::dispatchInvite( const rapidjson::Document& ){
-
+void GameViewModel::dispatchInvite( const rapidjson::Document& doc ){
+    const rj::Value* from = rj::GetValueByPointer( doc, "/request/invite/from" );
+    const rj::Value* to = rj::GetValueByPointer( doc, "/request/invite/to" );
+    assert( userName_ == to->GetString() );
+    rhs_ = from->GetString();
+    setRemoteStart( true );//TODO: show gameboard
 }
 
 void GameViewModel::dispatchMessage( const rapidjson::Document& ){
@@ -195,15 +213,17 @@ void GameViewModel::onConnected(){
 }
 
 void GameViewModel::dispatchQuery( const rapidjson::Document& doc ){
-    const rj::Value* usersV = rj::GetValueByPointer( doc, "/request/query" );
+    const rj::Value* usersV = rj::GetValueByPointer( doc, "/participants" );
 
     if( usersV && usersV->IsArray() ){
         const rj::Value& userRef = *usersV;
 
         for( rj::SizeType i = 0; i < usersV->Size(); i++ ){
-           std::string u( userRef[ i ].GetString() );
-           qDebug() << ">>>> " << u.c_str();
-           users_.append( u.c_str() );
+           QString u( userRef[ i ].GetString() );
+           qDebug() << ">>>> " << u;
+
+            if( u != userName_ && !users_.contains( u ) )
+                users_.append( u );
         }
 
         emit usersChanged();
@@ -224,6 +244,10 @@ void GameViewModel::dispatchRegister( const rapidjson::Document& doc ){
             qWarning() << userName_  << " == " << user;
         }
     }
+
+    auto qReq = std::make_shared<rj::Document>();
+    rj::SetValueByPointer( *qReq, "/request/query", rj::Value( rj::kNullType ) );
+    transport_.send( qReq );
 }
 
 void GameViewModel::init( const QString& name ){

@@ -27,6 +27,7 @@ Transport::~Transport(){
 
 void Transport::run(){
     isRunning_ = true;
+    qDebug() << __func__ << "enter";
     ioRunner_ = std::thread{ [ this ](){ ioService_.run(); } };
     r_.async_resolve( { host_, port_ }, [ this ]( const boost::system::error_code& rc, io::ip::tcp::resolver::iterator it ){
         if( !rc ){
@@ -42,6 +43,7 @@ void Transport::run(){
             qCritical() << "222222: " << rc.message().c_str();
         }
     } );
+    qDebug() << __func__ << "exit";
 }
 
 void Transport::shutdown(){

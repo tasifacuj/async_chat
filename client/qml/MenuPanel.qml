@@ -119,14 +119,6 @@ Item {
                 spacing: 10
 
                 Button {
-                    id: button1PlayerGame
-                    text: "1 Player Game"
-                    disabled: true
-                    onClicked: {
-                        // TODO: Implement 1 player game
-                    }
-                }
-                Button {
                     id: button2PlayerGame
                     text: "2 Players Game"
                     onClicked: {

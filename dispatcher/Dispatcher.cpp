@@ -54,10 +54,13 @@ void Dispatcher::dispatchRegister( std::shared_ptr<rapidjson::Document> doc )try
     transport_.sendMessage( response );
 
     // notify
-    std::for_each( appSessions_.begin(), appSessions_.end(), [ doc, this ]( const AppSessionSet::value_type& vt ){
+    std::for_each( appSessions_.begin(), appSessions_.end(), [ doc, this, &from ]( const AppSessionSet::value_type& vt ){
+        std::shared_ptr<rapidjson::Document> notify = std::make_shared<rj::Document>();
         int h = vt.right;
-        rj::SetValueByPointer( *doc, "/cookie/handle", h );    
-        transport_.sendMessage( doc );
+        rj::SetValueByPointer( *notify, "/cookie/handle", h );
+        rj::SetValueByPointer( *notify, "/request/register/from", rj::Value( from.c_str(), notify->GetAllocator() ) );
+        std::cerr << "Send reg notification to " << vt.left << ":" << h << std::endl;    
+        transport_.sendMessage( notify );
     } );
 }catch( const std::exception& ex ){
     std::cerr << ex.what() << std::endl;
@@ -78,6 +81,7 @@ void Dispatcher::dispatchInvite( std::shared_ptr<rapidjson::Document> doc )try{
         transport_.sendMessage( response );
 
         int otherHandle = toIt->second;
+        std::cerr << "Send invite notification to " << toIt->first << ":" << otherHandle << std::endl;
         rj::SetValueByPointer( *doc, "/cookie/handle", otherHandle );
         transport_.sendMessage( doc );
     }else{

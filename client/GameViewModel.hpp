@@ -9,6 +9,8 @@
 #include <QTimer>
 #include <QQmlListProperty>
 
+#include <functional>
+
 #include "Tile.hpp"
 #include "TransportResponseInterface.hpp"
 #include "Transport.hpp"
@@ -31,6 +33,10 @@ namespace FiveInRow {
         transport::Transport    transport_;
         QStringList             users_;
         QString                 userName_;
+        using ResponseHandler = std::function<void( const rapidjson::Document& )>;
+        ResponseHandler         defaultHandler_ = nullptr;
+        QString                 rhs_;
+        bool                    remoteStart_ = false;
     public:
 //        static constexpr char* Name = "User 0";
     public:
@@ -64,13 +70,17 @@ namespace FiveInRow {
         Q_INVOKABLE void selectUser( int idx );
 
         void init( const QString& name );
+
+        Q_PROPERTY(bool RemoteStart READ getRemoteStart WRITE setRemoteStart NOTIFY remoteStartChanged);
+        bool getRemoteStart() { return remoteStart_; }
+        void setRemoteStart( bool val ){ if( remoteStart_ == val ) return; remoteStart_ = val; emit remoteStartChanged(); }
     public: // == TransportResponseInterface ==
         virtual void onReadCompleted( const rapidjson::Document& d ) override;
         virtual void onWriteError( const QString& err ) override;
         virtual void onParseError( const QString& err ) override;
         virtual void onConnected() override;
     public slots:
-        void resetGame();
+        void resetGame( bool remote = false );
         void pauseGame(bool state);
         void flip(int index);
         void undoTile();
@@ -82,7 +92,7 @@ namespace FiveInRow {
         void player1TurnChanged();
         void gameOnChanged();
         void usersChanged();
-
+        void remoteStartChanged();
     private: //== internals ==
         Tile *tile(int index) const {return (index >= 0 && index < tiles_.count()) ? tiles_.at(index) : 0;}
         bool checkWin(int index, int dx, int dy, QList<Tile *> &winningTiles);
