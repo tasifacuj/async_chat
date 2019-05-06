@@ -72,6 +72,8 @@ bool ChatConnection::requestWrite( std::shared_ptr<rapidjson::Document> doc ){
             std::cerr << "sent " << len << " bytes into " << nativeHandle() << std::endl;
         }
     });
+
+    return true;
 }
 
 void ChatConnection::release(){
