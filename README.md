@@ -14,8 +14,11 @@ Currently it works as ping/pong only
 # how to run
 
 - cd src_dir
-- cmake .
+- qmake .
 - make
-- ./chat_server
-- ./chat_client
+- ./server
+- cd client
+- qmake
+- make
+- ./client username
 
