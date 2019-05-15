@@ -7,9 +7,9 @@ Currently it works as ping/pong only
 - c++14
 - boost asio 1-58
 - boost system 1-58
-- cmake 3.5.1
+- qt 5.9.12
 - gcc 5.4.0
-- ubuntu 16
+- ubuntu 18
 
 # how to run
 
