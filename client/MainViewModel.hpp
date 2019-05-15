@@ -20,7 +20,7 @@ namespace FiveInRow {
         void init( const QString& name );
     private:
         QQmlApplicationEngine engine_;
-        GameViewModel m_gameData;
+        GameViewModel gameData_;
     };
 }
 
