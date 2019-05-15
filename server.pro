@@ -29,3 +29,6 @@ unix {
 INCLUDEPATH += 3rdParty/rapidjson/include
 
 LIBS += -lboost_system
+
+DISTFILES += \
+    transport/doc/api.json

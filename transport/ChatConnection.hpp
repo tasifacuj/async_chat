@@ -21,7 +21,7 @@ namespace chat{
             dispatcher::DispatcherInterface&                d_;             //!< dispatching layer
             std::vector<char>                               msgBuffer_;
         public: // == Ctors ==
-            ChatConnection(  std::shared_ptr<boost::asio::ip::tcp::socket>        s, boost::asio::io_service& ioService, dispatcher::DispatcherInterface& d, ConnectionManager& cm );
+            ChatConnection(  std::shared_ptr<boost::asio::ip::tcp::socket> s, boost::asio::io_service& ioService, dispatcher::DispatcherInterface& d, ConnectionManager& cm );
             ChatConnection( const ChatConnection& ) = delete;
             ChatConnection& operator=( const ChatConnection& ) = delete;
             virtual ~ChatConnection();
